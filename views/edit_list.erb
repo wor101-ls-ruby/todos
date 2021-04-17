@@ -1,0 +1,33 @@
+<% if session[:error] %>
+  <div class="flash error">
+    <p><%= session.delete(:error) %></p>
+  </div>
+<% end %>
+
+<section id="todos">
+  <header>
+      <h2>Editing '<%= @list[:name] %>'</h2>
+      <ul>
+        <li>
+          <form action="/lists/<%= params[:id] %>/delete" method="post">
+            <button type="submit" class="delete">Delete List</button>
+          </form>
+        </li>
+      </ul>
+  </header>
+</section>
+
+<form action="/lists/<%= params[:id] %>/edit" method="post">
+  <dl>
+    <dt>
+      <label for="list_name">Enter the new name for the list:</label>
+    </dt>
+    <dd>
+      <input name="new_list_name" placeholder="New List Name" type="text" value="<%= @params[:new_list_name] || @list[:name] %>">
+    </dd>
+  </dl>
+  <fieldset class="actions">
+    <input type="submit" value="Save">
+    <a href="/lists/<%= params[:id] %>">Cancel</a>
+  </fieldset>
+</form>
