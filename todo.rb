@@ -41,12 +41,10 @@ def error_for_list_name(name)
   end
 end
 
-# Return an error message if the name is invalid
+# Return an error message if the todo name is invalid
 def error_for_todo_list(name, todos)
   if !(1..100).cover?(name.size)
-    'List name must be between 1 and 100 characters.'
-  elsif todos.any? { |todo| todo == name }
-    'List name must be unique.'
+    'Todo must be between 1 and 100 characters.'
   end
 end
 
@@ -67,8 +65,8 @@ end
   
 # View a single list
 get '/lists/:id' do
-  id = params[:id].to_i
-  @list = session[:lists][id]
+  @list_id = params[:id].to_i
+  @list = session[:lists][@list_id]
   erb :list, layout: :layout
 end
 
@@ -108,18 +106,29 @@ post '/lists/:id/delete' do
   redirect '/lists'
 end
 
-# Add a todo item
-post '/lists/:id/todos' do
-  id = params[:id].to_i
-  @list = session[:lists][id]
-  todo_item = params[:todo_item].strip
+# Add a todo item to a list
+post '/lists/:list_id/todos' do
+  @list_id = params[:list_id].to_i
+  @list = session[:lists][@list_id]
+  todo_name = params[:todo_item].strip
   
-  error = error_for_todo_list(todo_item, @list[:todos])
+  error = error_for_todo_list(todo_name, @list[:todos])
   if error
     session[:error] = error
     erb :list, layout: :layout
   else
-    @list[:todos] << todo_item
-    redirect "/lists/#{id}"
+    @list[:todos] << { name: todo_name, completed: false }
+    session[:success] = "The todo was added."
+    redirect "/lists/#{@list_id}"
   end
+end
+
+# Remove a todo item from the list
+post '/lists/:list_id/todos/:todo_id/delete' do
+  @list_id = params[:list_id].to_i
+  @todo_id = params[:todo_id].to_i
+  @todos = session[:lists][@list_id][:todos]
+  deleted_todo = @todos.delete_at(@todo_id)
+  session[:success] = "#{deleted_todo[:name]} was successfully deleted."
+  redirect "/lists/#{@list_id}"
 end
