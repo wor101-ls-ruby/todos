@@ -4,10 +4,29 @@ require 'tilt/erubis'
 require 'sinatra/content_for'
 
 
-
 configure do
   enable :sessions
   set :session_secret, 'secret'
+end
+
+helpers do
+  def todos_count(list)
+    list[:todos].size
+  end
+  
+  def todos_remaining(list)
+    total = 0
+    list[:todos].each { |todo| total += 1 if todo[:completed] == true }
+    todos_count(list) - total
+  end
+
+  def list_completed?(todos)
+    todos.all? { |todo| todo[:completed] == true } && todos.size >= 1
+  end
+
+  def list_class(list)
+    "complete" if list_completed?(list[:todos])
+  end
 end
 
 before do
@@ -139,12 +158,23 @@ end
 post '/lists/:list_id/todos/:todo_id' do
   @list_id = params[:list_id].to_i
   @list = session[:lists][@list_id]
-
   todo_id = params[:todo_id].to_i
   is_completed = params[:completed] == "true" 
+  
   @list[:todos][todo_id][:completed] = is_completed
 
   session[:success] = "Todo has been updated"
+  redirect "/lists/#{@list_id}"
+end
+
+# Complete all todo tasks
+post '/lists/:list_id/complete_all' do
+  @list_id = params[:list_id].to_i
+  @list = session[:lists][@list_id]
+
+  @list[:todos].each { |todo| todo[:completed] = true }
+
+  session[:success] = "All todo's have been marked as completed"
   redirect "/lists/#{@list_id}"
 end
 

@@ -1,11 +1,15 @@
 <ul id="lists">
   <% @lists.each_with_index do |list, index| %>
-    <li>
-      <a>
-        <h2><a href="lists/<%= index %>"><%=list[:name]%></a> </h2>
-        <p><%= list[:todos].size%></p>
-      </a>
-    </li>
+    <% if list_completed?(list[:todos]) %>
+      <li class="<%= list_class(list) %>">
+    <% else %>
+      <li>
+    <% end %>
+        <a>
+          <h2><a href="lists/<%= index %>"><%=list[:name]%></a> </h2>
+          <p><%= todos_remaining(list) %>/<%= todos_count(list) %></p>
+        </a>
+      </li>
   <% end %>
 </ul>
 
