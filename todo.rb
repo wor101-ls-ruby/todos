@@ -3,6 +3,8 @@ require 'sinatra/reloader'
 require 'tilt/erubis'
 require 'sinatra/content_for'
 
+
+
 configure do
   enable :sessions
   set :session_secret, 'secret'
@@ -132,3 +134,17 @@ post '/lists/:list_id/todos/:todo_id/delete' do
   session[:success] = "#{deleted_todo[:name]} was successfully deleted."
   redirect "/lists/#{@list_id}"
 end
+
+# Toggle the status of a todo
+post '/lists/:list_id/todos/:todo_id' do
+  @list_id = params[:list_id].to_i
+  @list = session[:lists][@list_id]
+
+  todo_id = params[:todo_id].to_i
+  is_completed = params[:completed] == "true" 
+  @list[:todos][todo_id][:completed] = is_completed
+
+  session[:success] = "Todo has been updated"
+  redirect "/lists/#{@list_id}"
+end
+
