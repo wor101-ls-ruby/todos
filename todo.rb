@@ -151,8 +151,16 @@ post '/lists/:id/delete' do
   @list = load_list(id)
   
   deleted_list = session[:lists].delete_at(id)
-  session[:success] = "The #{deleted_list[:name]} list has been deleted"
-  redirect '/lists'
+  
+    #check to see if request beig sent via AJAX
+  if env["HTTP_X_REQUESTED_WITH"] == "XMLHttpRequest"
+    "/lists"
+  else
+    session[:success] = "The #{deleted_list[:name]} list has been deleted"
+    redirect '/lists'
+  end
+  
+
 end
 
 # Add a todo item to a list
@@ -178,8 +186,14 @@ post '/lists/:list_id/todos/:todo_id/delete' do
   @todo_id = params[:todo_id].to_i
   @todos = load_list(@list_id)[:todos]
   deleted_todo = @todos.delete_at(@todo_id)
-  session[:success] = "#{deleted_todo[:name]} was successfully deleted."
-  redirect "/lists/#{@list_id}"
+  
+  #check to see if request beig sent via AJAX
+  if env["HTTP_X_REQUESTED_WITH"] == "XMLHttpRequest"
+    status 204 # says there is no content
+  else
+    session[:success] = "#{deleted_todo[:name]} was successfully deleted."
+    redirect "/lists/#{@list_id}"
+  end
 end
 
 # Toggle the status of a todo
