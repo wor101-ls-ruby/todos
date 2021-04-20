@@ -39,8 +39,8 @@ helpers do
   def sort_todos(todos, &block)
     complete_todos, incomplete_todos = todos.partition { |todo| todo[:completed] }
 
-    incomplete_todos.each { |todo| yield todo, todos.index(todo) }
-    complete_todos.each { |todo| yield todo, todos.index(todo) }    
+    incomplete_todos.each(&block)
+    complete_todos.each(&block) 
   end
   
   def h(contents)
@@ -163,6 +163,12 @@ post '/lists/:id/delete' do
 
 end
 
+
+def next_todo_id(todos)
+  max = todos.map { |todo| todo[:id] }.max || 0
+  max + 1
+end
+
 # Add a todo item to a list
 post '/lists/:list_id/todos' do
   @list_id = params[:list_id].to_i
@@ -174,7 +180,10 @@ post '/lists/:list_id/todos' do
     session[:error] = error
     erb :list, layout: :layout
   else
-    @list[:todos] << { name: todo_name, completed: false }
+    
+    id = next_todo_id(@list[:todos])
+    @list[:todos] << {id: id, name: todo_name, completed: false }
+    
     session[:success] = "The todo was added."
     redirect "/lists/#{@list_id}"
   end
@@ -185,13 +194,15 @@ post '/lists/:list_id/todos/:todo_id/delete' do
   @list_id = params[:list_id].to_i
   @todo_id = params[:todo_id].to_i
   @todos = load_list(@list_id)[:todos]
-  deleted_todo = @todos.delete_at(@todo_id)
+  
+  @todos.reject! { |todo| todo[:id] == @todo_id }
+  #deleted_todo = @todos.delete_at(@todo_id)
   
   #check to see if request beig sent via AJAX
   if env["HTTP_X_REQUESTED_WITH"] == "XMLHttpRequest"
     status 204 # says there is no content
   else
-    session[:success] = "#{deleted_todo[:name]} was successfully deleted."
+    session[:success] = "The todo was successfully deleted."
     redirect "/lists/#{@list_id}"
   end
 end
@@ -203,7 +214,9 @@ post '/lists/:list_id/todos/:todo_id' do
   todo_id = params[:todo_id].to_i
   is_completed = params[:completed] == "true" 
   
-  @list[:todos][todo_id][:completed] = is_completed
+  todo = @list[:todos].find { |todo| todo[:id] == todo_id }
+  todo[:completed] = is_completed
+  #@list[:todos][todo_id][:completed] = is_completed
 
   session[:success] = "Todo has been updated"
   redirect "/lists/#{@list_id}"

@@ -14,19 +14,19 @@
   </header>
 
   <ul>
-  <% sort_todos(@list[:todos]) do |todo, index| %>
+  <% sort_todos(@list[:todos]) do |todo| %>
       <% if todo[:completed] %>
         <li class="complete">
       <% else%>
         <li>
       <% end %>
 
-          <form action="/lists/<%= @list_id %>/todos/<%= index %>" method="post" class="check">
+          <form action="/lists/<%= @list_id %>/todos/<%= todo[:id] %>" method="post" class="check">
             <input type="hidden" name="completed" value="<%= !todo[:completed] %>" />
             <button type="submit">Complete</button>
           </form>
           <h3><%= todo[:name] %></h3>
-          <form action="/lists/<%= @list_id %>/todos/<%= index %>/delete" method="post" class="delete">
+          <form action="/lists/<%= @list_id %>/todos/<%= todo[:id] %>/delete" method="post" class="delete">
             <button type="submit">Delete</button>
           </form>
         </li>
@@ -40,7 +40,7 @@
       <label for="todo_item">Enter a new todo item:</label>
     </dt>
     <dd>
-      <input name="todo_item" placeholder="Todo Item" type="text" value="<%= params[:todo_item] %>">
+      <input name="todo_item" id="todo" placeholder="Todo Item" type="text" value="<%= params[:todo_item] %>">
     </dd>
   </dl>
   <fieldset class="actions">
