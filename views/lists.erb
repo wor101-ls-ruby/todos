@@ -6,7 +6,7 @@
       <li>
     <% end %>
         <a>
-          <h2><a href="lists/<%= index %>"><%=h list[:name]%></a> </h2>
+          <h2><a href="lists/<%= list[:id] %>"><%=h list[:name]%></a> </h2>
           <p><%= todos_remaining(list) %>/<%= todos_count(list) %></p>
         </a>
       </li>

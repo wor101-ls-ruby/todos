@@ -89,24 +89,38 @@ def error_for_todo_list(name, todos)
 end
 
 # Confirm requested list exists and display error if not
-def load_list(index)
-  list = session[:lists][index] if index && session[:lists][index]
+def load_list(id)
+  all_lists = session[:lists]
+  list = all_lists.find { |list| list[:id] == id }
+  
+  #list = session[:lists][index] if index && session[:lists][index]
   return list if list
   
   session[:error] = "The specified list was not found."
   redirect '/lists'
 end
 
+def get_next_list_id(lists)
+  max = lists.map { |list| list[:id] }.max || 0
+  max + 1
+end
+
+def next_todo_id(todos)
+  max = todos.map { |todo| todo[:id] }.max || 0
+  max + 1
+end
+
 # Create a new list
 post '/lists' do
   list_name = params[:list_name].strip
+  id = get_next_list_id(session[:lists])
 
   error = error_for_list_name(list_name)
   if error
     session[:error] = error
     erb :new_list, layout: :layout
   else
-    session[:lists] << { name: list_name, todos: [] }
+    session[:lists] << { id: id, name: list_name, todos: [] }
     session[:success] = 'The list has been created.'
     redirect '/lists'
   end
@@ -123,7 +137,9 @@ end
 get '/lists/:id/edit' do
   id = params[:id].to_i
   @list = load_list(id)
-  @current_name = session[:lists][id][:name]
+  @current_name = session[:lists].find { |list| list[:id] == id }
+  
+  #@current_name = session[:lists][id][:name]
   
   erb :edit_list, layout: :layout
 end
@@ -133,13 +149,15 @@ post '/lists/:id/edit' do
   id = params[:id].to_i
   @list = load_list(id)
   new_list_name = params[:new_list_name].strip
+  list = session[:lists].find { |list| list[:id] == id }
   
   error = error_for_list_name(new_list_name)
   if error
     session[:error] = error
     erb :edit_list, layout: :layout
   else
-   session[:lists][id][:name] = new_list_name
+   list[:name] = new_list_name
+   #session[:lists][id][:name] = new_list_name
    session[:success] = "The list has been renamed #{new_list_name}"
    redirect "/lists/#{id}"
   end
@@ -150,23 +168,17 @@ post '/lists/:id/delete' do
   id = params[:id].to_i
   @list = load_list(id)
   
-  deleted_list = session[:lists].delete_at(id)
+  session[:lists].reject! { |list| list[:id] == id }
+  
+  #deleted_list = session[:lists].delete_at(id)
   
     #check to see if request beig sent via AJAX
   if env["HTTP_X_REQUESTED_WITH"] == "XMLHttpRequest"
     "/lists"
   else
-    session[:success] = "The #{deleted_list[:name]} list has been deleted"
+    session[:success] = "The list has been deleted"
     redirect '/lists'
   end
-  
-
-end
-
-
-def next_todo_id(todos)
-  max = todos.map { |todo| todo[:id] }.max || 0
-  max + 1
 end
 
 # Add a todo item to a list
